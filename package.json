@@ -1,0 +1,23 @@
+{
+  "name": "vanjs",
+  "version": "1.0.0",
+  "description": "van is jiavan",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jiavan/vanjs.git"
+  },
+  "keywords": [
+    "js",
+    "vanjs"
+  ],
+  "author": "Jiavan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jiavan/vanjs/issues"
+  },
+  "homepage": "https://github.com/Jiavan/vanjs#readme"
+}

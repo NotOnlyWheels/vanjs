@@ -29,13 +29,22 @@
             // 如果传入的是原生DOM对象/对象集或者直接是函数
             // 直接通过Van()或者$()形式调用函数，在DOM树解析完成后执行
             if (typeof selector === 'object') {
-                selector = Array.prototype.slice.call(selector);
-                for (var i = 0; i < selector.length; i++) {
-                    this[i] = selector[i];
-                }
-                this.length = selector.length;
 
-                return;
+                // 如果传入的是类数组对象，那么转换为数组进行遍历
+                if (selector.length) {
+                    selector = Array.prototype.slice.call(selector);
+                    for (var i = 0; i < selector.length; i++) {
+                        this[i] = selector[i];
+                    }
+                    this.length = selector.length;
+                    return this;
+                } else {
+
+                    // 如果是原生的DOM对象
+                    this[0] = selector;
+                    this.length = 1;
+                    return this;
+                }
             } else if (typeof selector === 'function') {
                 this.ready(selector);
                 return this;
@@ -59,6 +68,7 @@
                 for (i = 0; i < element.length; i++) {
                     this[i] = element[i];
                 }
+                this.selector = selector;
                 this.length = element.length;
 
                 return this;
@@ -242,8 +252,43 @@
             }
 
             return obj;
-        }
+        },
 
+        // 查找某一元素集合，返回的是Van对象，不是DOM集合对象
+        find: function (selector) {
+            if (!selector) {
+                return;
+            }
+
+            var context = this.selector;
+            return Van(context + ' ' + selector);
+        },
+
+        // 获得第一个元素，Van对象类型
+        first: function () {
+            return Van(this[0]);
+        },
+
+        // 最后一个元素，Van类型
+        last: function () {
+            return Van(this[this.length - 1]);
+        },
+
+        // 获得指定num的元素，并返回Van对象
+        eq: function (num) {
+            var res = num < 0 ?
+                this[this.length - 1] :
+                this[num];
+
+            return Van(res);
+        },
+
+        // 获得指定num的原生DOM对象
+        get: function (num) {
+            return num < 0 ?
+                this[this.length - 1 + num] :
+                this[num];
+        }
     };
 
     /**
@@ -257,6 +302,111 @@
         }
         return element;
     }
+
+    /**
+     * Ajax请求
+     * @param options 选项配置信息
+     */
+    Van.ajax = function(options) {
+
+        // 默认配置
+        var defaultOptions = {
+            url: false, // ajax请求地址
+            type: 'GET', // 请求方式
+            data: false, // post时附带的数据
+            success: false, // ajax成功回调函数
+            complete: false // ajax完成时的回调
+        };
+        var xhr = null,
+            url;
+
+        // 配置传入的options，如果存在值为undefined属性，则设为默认options value
+        for (var i in defaultOptions) {
+            if (options[i] === undefined) {
+                options[i] = defaultOptions[i];
+            }
+        }
+
+        xhr = new XMLHttpRequest();
+        url = options.url;
+        xhr.open(options.type, url);
+        xhr.onreadystatechange = onStateChange;
+
+        if (options.type.toLowerCase() === 'post') {
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        }
+        xhr.send(options.data ? options.data : null);
+
+        // ajax回应状态更改
+        function onStateChange() {
+            if (xhr.readyState === 4) {
+                var result,
+                    status = xhr.status;
+
+                if ((status >= 200 && status < 300) || status === 304) {
+                    result = xhr.responseText;
+
+                    if (window.JSON) {
+                        result = JSON.parse(result);
+                    } else {
+                        result = eval('(' + result + ')');
+                    }
+
+                    // 数据解析完成，调用触发ajax请求成功
+                    ajaxSuccess(result, xhr);
+                } else {
+                    console.log('ERR', xhr.status);
+                }
+            }
+        }
+
+        // ajax请求成功
+        function ajaxSuccess(data, xhr) {
+            var status = 'success';
+            // 如果存在ajax成功回调函数，就调用回调函数
+            options.success && options.success(data, options, status, xhr);
+            // ajax请求成功后触发ajax请求过程已完成
+            ajaxComplete(status);
+        }
+
+        // ajax请求完成
+        function ajaxComplete(status) {
+            options.complete && options.complete(status);
+        }
+    };
+
+    /**
+     * 通过ajax方法发get请求
+     * @param url 请求地址
+     * @param successCallback 成功回调函数
+     * @param completeCallback 完成回调函数
+     */
+    Van.get = function (url, successCallback, completeCallback) {
+        var options = {
+            url: url,
+            success: successCallback,
+            complete: completeCallback
+        };
+        Van.ajax(options);
+    };
+
+    /**
+     * 通过ajax方法发post类型请求，二次封装
+     * @param url 请求地址
+     * @param data 要post的数据
+     * @param successCallback 成功回调
+     * @param completeCallback 完成回调
+     */
+    Van.post = function (url, data, successCallback, completeCallback) {
+        var options = {
+            url: url,
+            type: 'post',
+            data: data,
+            success: successCallback,
+            complete: completeCallback
+        };
+        Van.ajax(options);
+    };
 
     // 将init方法的原型指向van的原型，以便生成的实例可以完成链式调用
     Van.prototype.init.prototype = Van.prototype;

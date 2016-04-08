@@ -13,3 +13,26 @@ element.style获得的是应用在元素style属性中的样式（不包括css�
 // 通过currentStyle或者getComputedStyle获取全部css属性
 // getComputedStyle只读不能写，getPropertyValue获得属性值
 ```
+
+# 页面加载
+```javascript
+DOM文档加载的步骤为
+
+0. 解析HTML结构。
+1. 加载外部脚本和样式表文件。
+2. 解析并执行脚本代码。
+3. DOM树构建完成。//DOMContentLoaded
+4. 加载图片等外部文件。
+5. 页面加载完毕。//load
+在第4步，会触发DOMContentLoaded事件。在第6步，触发load事件。
+```
+
+
+
+----
+
+# 问题
+JS遍历数组与对象的方法？
+
+Array.prototype.forEach用于数组遍历，跳过undefined
+for （key in obj）遍历对象，会遍历对象原型中的属性

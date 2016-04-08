@@ -26,6 +26,21 @@
                 return this;
             }
 
+            // 如果传入的是原生DOM对象/对象集或者直接是函数
+            // 直接通过Van()或者$()形式调用函数，在DOM树解析完成后执行
+            if (typeof selector === 'object') {
+                selector = Array.prototype.slice.call(selector);
+                for (var i = 0; i < selector.length; i++) {
+                    this[i] = selector[i];
+                }
+                this.length = selector.length;
+
+                return;
+            } else if (typeof selector === 'function') {
+                this.ready(selector);
+                return this;
+            }
+
             var element,
                 i;
             selector = selector.trim();
@@ -48,7 +63,6 @@
 
                 return this;
             }
-
         },
 
         /**
@@ -134,8 +148,115 @@
             }
 
             return this;
+        },
+
+        // 返回元素的下一个相邻节点
+        next: function () {
+            return sibling(this[0], 'nextSibling');
+        },
+
+        // 返回元素上一个相邻节点
+        prev: function () {
+            return sibling(this[0], 'previousSibling');
+        },
+
+        // 返回元素的父节点，暂时不稳定
+        _parent: function () {
+            var parent = this[0].parentNode;
+            var p = Van();
+            parent = parent && parent.nodeType !== 11 ? parent : null;
+            p[0] = parent;
+            p.selector = parent.tagName.toLowerCase();
+            p.length = 1;
+
+            return p;
+        },
+
+        // 返回元素的所有父节点
+        parents: function () {
+            var p = Van(),
+                i = 0;
+
+            // 从当前元素的父节点到document，document.nodeType === 9
+            while ((this[0] = this[0]['parentNode']) && this[0].nodeType !== 9) {
+                if (this[0].nodeType === 1) {
+                    p[i] = this[0];
+                    i++;
+                }
+            }
+
+            p.length = i;
+
+            return p;
+        },
+
+        // 当DOM树已经生成
+        ready: function (fn) {
+            doc.addEventListener('DOMContentLoaded', fn, false);
+        },
+
+        // 遍历对象或数组
+        each: function (obj, callback, args) {
+            var i = 0,
+                length = obj.length,
+                isArray = Array.isArray(obj),
+                value;
+
+            // 如果带有参数，将参数通过apply传入回调函数
+            if (args) {
+                if (isArray) {
+                    for (; i < length; i++) {
+                        value = callback.apply(obj[i], args);
+
+                        if (value === false) {
+                            break;
+                        }
+                    }
+                } else {
+                    for (i in obj) {
+                        value = callback.apply(obj[i], args);
+
+                        if (value === false) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // 如果没有带参数，用call方法并传入元素的索引值以及本身
+                if (isArray) {
+                    for (; i < length; i++) {
+                        value = callback.call(obj[i], i, obj[i]);
+                        if (value === false) {
+                            break;
+                        }
+                    }
+                } else {
+                    for (i in obj) {
+                        value = callback.call(obj[i], i, obj[i]);
+
+                        if (value === false) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return obj;
         }
+
     };
+
+    /**
+     * 筛选是nodeType为1(为元素标签)的子节点
+     * @param element 目标元素
+     * @param dest 筛选的类型，previous ？ next
+     * @returns {*}
+     */
+    function sibling(element, dir) {
+        while ((element = element[dir]) && element.nodeType !== 1) {
+        }
+        return element;
+    }
 
     // 将init方法的原型指向van的原型，以便生成的实例可以完成链式调用
     Van.prototype.init.prototype = Van.prototype;

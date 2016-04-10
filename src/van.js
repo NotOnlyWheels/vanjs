@@ -84,19 +84,30 @@
         css: function (attr, val) {
             for (var i = 0; i < this.length; i++) {
 
-                // 当只有一个参数时为获得元素的某一属性
-                if (arguments.length === 1) {
+                if (typeof attr === 'string') {
+                    // 当只有一个参数时为获得元素的某一属性
+                    if (arguments.length === 1) {
 
-                    // getComputedStyle IE 6~8是不支持的，currentStyle为ie属性
-                    // 通过currentStyle或者getComputedStyle获取全部css属性
-                    // getComputedStyle只读不能写，getPropertyValue获得属性值
-                    return this[i].currentStyle ?
-                        this[i].currentStyle[attr] :
-                        window.getComputedStyle(this[i], null).getPropertyValue(attr);
+                        // getComputedStyle IE 6~8是不支持的，currentStyle为ie属性
+                        // 通过currentStyle或者getComputedStyle获取全部css属性
+                        // getComputedStyle只读不能写，getPropertyValue获得属性值
+                        return this[i].currentStyle ?
+                            this[i].currentStyle[attr] :
+                            window.getComputedStyle(this[i], null).getPropertyValue(attr);
+                    }
+
+                    // 两个参数时设置对应的属性值
+                    this[i].style[attr] = val;
+                } else if (typeof attr === 'object') {
+                    var that = this[i];
+
+                    // 将对象css值全部应用在元素上，注意cssText会覆盖掉之前的样式
+                    // 所以应该在原有的css样式基础上追加css
+                    // 注意缓存上面的this
+                    Van.prototype.each(attr, function (key, value) {
+                        that.style.cssText += ' ' + key + ':' + value + ';';
+                    });
                 }
-
-                // 两个参数时设置对应的属性值
-                this[i].style[attr] = val;
             }
 
             return this;
@@ -213,6 +224,7 @@
                 value;
 
             // 如果带有参数，将参数通过apply传入回调函数
+            // callback第一个参数是key，第二个参数是value
             if (args) {
                 if (isArray) {
                     for (; i < length; i++) {
@@ -288,6 +300,130 @@
             return num < 0 ?
                 this[this.length - 1 + num] :
                 this[num];
+        },
+
+        /**
+         * 设置/获得属性值，仅传一个参数时返回属性值，2个参数或者
+         * attribute key-value对象时为设置参数
+         * @param attr 属性名称
+         * @param val 属性值
+         * @returns {string}
+         */
+        attr: function (attr, val) {
+            var i,
+                that;
+
+            for (i = 0; i < this.length; i++) {
+                if (typeof attr === 'string') {
+
+                    // 获取属性值
+                    if (arguments.length === 1) {
+                        return this[i].getAttribute(attr);
+                    }
+
+                    this[i].setAttribute(attr, val);
+                } else {
+
+                    // 设置多个属性值
+                    that = this[i];
+                    Van.prototype.each(attr, function (attr, val) {
+                        that.setAttribute(attr, val);
+                    });
+                }
+            }
+
+            return this;
+        },
+
+        // 设置或者获得data属性
+        data: function (attr, val) {
+            var i,
+                that;
+
+            for (i = 0; i < this.length; i++) {
+                if (typeof attr === 'string') {
+                    if (arguments.length === 1) {
+                        return this[i].getAttribute('data-' + attr);
+                    }
+
+                    this[i].setAttribute('data-' + attr, val);
+                } else {
+                    that = this[i];
+                    Van.prototype.each(attr, function (attr, val) {
+                        that.setAttribute('data-' + attr, val);
+                    });
+                }
+            }
+
+            return this;
+        },
+
+        // 获得元素的html内容/设置元素的html
+        html: function (val) {
+            var i;
+            if (val === undefined && this[0].nodeType === 1) {
+                return this[0].innerHTML;
+            } else {
+                for (i = 0; i < this.length; i++) {
+                    this[i].innerHTML = val;
+                }
+            }
+
+            return this;
+        },
+
+        text: function (val) {
+            if (val === undefined && this[0].nodeType === 1) {
+                return this[0].innerText;
+            } else {
+                for (var i = 0; i < this.length; i++) {
+                    this[i].innerText = val;
+                }
+            }
+        },
+
+        // 操作DOM，相对于innerHTML，该方法不会重新解析调用该方法的元素
+        // 因此不会影响到已经存在的元素解析，避免额外的解析操作
+        // beforebegin 在 element 元素的前面
+        // afterbegin 在 element 元素的第一个子节点前面
+        // beforeend 在 element 元素的最后一个子节点后面
+        // afterend 在 element 元素的后面
+        // text 是字符串，会被解析成 HTML 或 XML，并插入到 DOM 树中
+        appendDOM: function (el, position, str) {
+            el.insertAdjacentHTML(position, str);
+        },
+
+        // 添加在当前元素的最后一个子元素后面
+        append: function (str) {
+            for (var i = 0; i < this.length; i++) {
+                console.log(str)
+                Van.prototype.appendDOM(this[i], 'beforeend', str);
+            }
+            return this;
+        },
+
+        // 插在当前元素的前方
+        before: function (str) {
+            for (var i = 0; i < this.length; i++) {
+                Van.prototype.appendDOM(this[i], 'beforebegin', str);
+            }
+            return this;
+        },
+
+        // 插在当前元素的后方
+        after: function (str) {
+            for (var i = 0; i < this.length; i++) {
+                Van.prototype.appendDOM(this[i], 'afterend', str);
+            }
+            return this;
+        },
+
+        // 移除元素本身
+        remove: function () {
+            for (var i = 0; i < this.length; i++) {
+                this[i].parentNode.removeChild(this[i]);
+            }
+            return this;
         }
     };
 
@@ -307,7 +443,7 @@
      * Ajax请求
      * @param options 选项配置信息
      */
-    Van.ajax = function(options) {
+    Van.ajax = function (options) {
 
         // 默认配置
         var defaultOptions = {

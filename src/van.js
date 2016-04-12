@@ -424,6 +424,111 @@
                 this[i].parentNode.removeChild(this[i]);
             }
             return this;
+        },
+
+        _delegate: function (agent, type, selector, fn) {
+
+            agent.addEventListener(type, function (e) {
+                var target = e.target,
+                    ctarget = e.currentTarget,
+                    bubble = true;
+
+                while (target !== ctarget) {
+                    if (filiter(agent, selector, target)) {
+                        bubble = fn.call(target, e);
+                        return bubble;
+                    }
+                }
+            }, false);
+
+            function filiter(agent, selector, target) {
+                var nodes = agent.querySelectorAll(selector);
+                for (var i = 0; i < nodes.length; i++) {
+                    if (nodes[i] === target) {
+                        return true;
+                    }
+                }
+            }
+        },
+
+        // 绑定事件，不使用委托
+        _on: function (type, selector, fn) {
+            if (typeof selector === 'function') {
+                fn = selector;
+                for (var i = 0; i < this.length; i++) {
+                    if (!this[i].guid) {
+                        this[i].guid = ++Van.guid;
+                        Van.Events[Van.guid] = {};
+
+                        Van.Events[Van.guid][type] = [fn];
+                        Van._bind(this[i], type, this[i].guid);
+                    } else {
+                        var id = this[i].guid;
+                        if (Van.Events[id][type]) {
+                            Van.Events[id][type].push(fn);
+                        } else {
+                            Van.Events[id][type] = [fn];
+                            Van._bind(this[i], type, id);
+                        }
+                    }
+                }
+            }
+        },
+
+        _bind: function (dom, type, guid) {
+            dom.addEventListener(type, function (e) {
+                for (var i = 0; i < Van.Events[guid][type].length; i++) {
+                    Van.Events.guid[type][i].call(dom, e);
+                }
+            }, false);
+        },
+
+        // 设置/获得元素的宽度
+        width: function (val) {
+
+            // 当获取元素的宽度时
+            if (arguments.length === 0) {
+
+                // 如果选择的是window，即Van(this)
+                if (this[0].document === doc) {
+                    return this[0].innerWidth;
+                    // 如果选择的是document
+                } else if (this[0].nodeType === 9) {
+                    return document.documentElement.clientWidth;
+                } else {
+                    // 选择的是普通元素
+                    return parseInt(window.getComputedStyle(this[0], null)['width']);
+                }
+            } else {
+                // 设置元素的宽度
+                for (var i = 0; i < this.length; i++) {
+                    this[i].style.width = val + 'px';
+                }
+            }
+        },
+
+        // 设置或者获得元素的高度
+        height: function (val) {
+
+            // 当获取元素的高度时
+            if (arguments.length === 0) {
+
+                // 如果选择的是window，即Van(this)
+                if (this[0].document === doc) {
+                    return this[0].innerHeight;
+                    // 如果选择的是document
+                } else if (this[0].nodeType === 9) {
+                    return document.documentElement.clientHeight;
+                } else {
+                    // 选择的是普通元素
+                    return parseInt(window.getComputedStyle(this[0], null)['height']);
+                }
+            } else {
+                // 设置元素的高度
+                for (var i = 0; i < this.length; i++) {
+                    this[i].style.height = val + 'px';
+                }
+            }
         }
     };
 
@@ -542,6 +647,18 @@
             complete: completeCallback
         };
         Van.ajax(options);
+    };
+
+    // 挂载事件数组
+    Van.Events = [];
+    Van.guid = 0;
+
+    // Van扩展方法，原型扩展或直接对象挂载
+    Van.prototype.extend = Van.extend = function () {
+        var options = arguments[0];
+        for (var i in options) {
+            this[i] = options[i];
+        }
     };
 
     // 将init方法的原型指向van的原型，以便生成的实例可以完成链式调用

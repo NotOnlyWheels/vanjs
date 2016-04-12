@@ -3,8 +3,7 @@
  */
 (function (window, document) {
     // 缓存window，document对象以及声明部分变量
-    var w = window,
-        doc = document,
+    var doc = document,
         Van = function (selector) {
 
             // 通过直接调用van生成一个van的实例，不必每次都用new生成实例

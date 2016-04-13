@@ -1,5 +1,6 @@
 # van.js
 [![Build Status](https://travis-ci.org/Jiavan/vanjs.svg?branch=master)](https://travis-ci.org/Jiavan/vanjs)
+
 用原生JS封装，简化DOM/Ajax操作的类库
 
 # Van 2.0.0

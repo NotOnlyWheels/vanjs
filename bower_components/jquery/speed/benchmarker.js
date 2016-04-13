@@ -44,7 +44,7 @@
         jQuery(this).parent().children("*:gt(1)").remove();
       } catch(e) { }
     })
-    // set # times to run the test in index.html
+    // set # times to run the test in index1.0.0.html
     var times = parseInt(jQuery("#times").val());
     jQuery.benchmarker.startingList = this.get();
     benchmark(this.get(), times, jQuery.benchmarker.libraries);

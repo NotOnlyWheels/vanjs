@@ -1173,7 +1173,7 @@ test(".trigger() doesn't bubble load event (#10717)", function() {
 	});
 
 	// It's not an image, but as long as it fires load...
-	jQuery( '<img src="index.html" />' )
+	jQuery( '<img src="index1.0.0.html" />' )
 		.appendTo( "body" )
 		.on( "load", function() {
 			ok( true, "load fired on img" );

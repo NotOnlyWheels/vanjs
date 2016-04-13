@@ -425,19 +425,28 @@
             return this;
         },
 
+        /**
+         * 事件代理实现
+         * @param agent 代理对象
+         * @param type 事件类型
+         * @param selector 选择要设置事件的元素
+         * @param fn 事件处理程序
+         * @private
+         */
         _delegate: function (agent, type, selector, fn) {
 
             agent.addEventListener(type, function (e) {
                 var target = e.target,
-                    ctarget = e.currentTarget,
+                    //ctarget = e.currentTarget,
                     bubble = true;
 
-                while (target !== ctarget) {
-                    if (filiter(agent, selector, target)) {
-                        bubble = fn.call(target, e);
+                //while(bubble && target != ctarget) {
+                    if(filiter(agent,selector,target)) {
+                        bubble = fn.call(target,e);
                         return bubble;
                     }
-                }
+                    //target = target.parentNode;
+                //}
             }, false);
 
             function filiter(agent, selector, target) {

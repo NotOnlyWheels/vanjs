@@ -8,9 +8,18 @@
 
     var Van = (function () {
         var Van = function (selector, context) {
-            return new Van.fn.init(selector, context, rootVan);
-        },
-        rootVan;
+                return new Van.fn.init(selector, context, rootVan);
+            },
+
+            rootVan,
+
+        // reference core methods
+            toString = Object.prototype.toString,
+            hasOwn = Object.prototype.hasOwnProperty,
+            push = Array.prototype.push,
+            slice = Array.prototype.slice,
+            trim = String.prototype.trim,
+            indexOf = Array.prototype.indexOf;
 
         // fn为Van原型对象的别名
         Van.fn = Van.prototype = {
@@ -36,7 +45,57 @@
                     this.length = 1;
                     return this;
                 }
-            }
+            },
+            selector: '',
+            van: '2.0.0',
+
+            // Van对象的长度
+            length: 0,
+
+            // Van对象的size
+            size: function () {
+                return this.length;
+            },
+
+            // 将一个对象转换为数组
+            toArray: function () {
+                return slice.call(this, 0);
+            },
+
+            // 传入参数返回指定对象，支持负值
+            // 不传参数默认返回全部元素的数组
+            get: function (num) {
+                return num === null ?
+                    this.toArray() :
+                    (num < 0 ? this[this.length + num] : num);
+            },
+
+            //
+            pushStack: function (elems, name, selector) {
+
+            },
+
+            // 调用了静态方法
+            each: function (callback, args) {
+                return Van.each(this, callback, args);
+            },
+            ready: function (fn) {
+            },
+            eq: function (i) {
+            },
+            first: function () {
+            },
+            last: function () {
+            },
+            slice: function () {
+            },
+            map: function (callback) {
+            },
+            end: function () {
+            },
+            push: push,
+            sort: [].sort,
+            //splice: [].splice
         };
 
         // 将init方法的原型指向Van的原型，通过调用Van生成的init实例可调用Van原型上的方法
@@ -82,6 +141,90 @@
 
         return Van;
     })();
+
+    // 在Van的基础上扩展静态方法
+    Van.extend({
+
+        isArray: Array.isArray,
+
+        // 是否是一个函数
+        isFunction: function (val) {
+            return typeof val === 'function';
+        },
+
+        // 数组或对象遍历迭代方法
+        each: function (obj, callbcak, args) {
+            var i = 0,
+                key,
+                length = obj.length,
+                isArray = Array.isArray;
+
+            if (args) {
+
+                // 存在参数的时候用apply传递参数
+                if (isArray(obj)) {
+
+                    for (; i < length; i++) {
+                        if (callbcak.apply(obj[i], args) === false) {
+                            break;
+                        }
+                    }
+                } else {
+
+                    // obj为对象时用for in循环，能遍历到原型中的属性
+                    for (key in obj) {
+                        if (callbcak.apply(obj[key], args) === false) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+
+                // 不存在外部传参时，使用call方法传递参数，回调第一个参数是key，第二个是value
+                if (isArray(obj)) {
+                    for (; i < length; i++) {
+                        if (callbcak.call(obj[i], i, obj[i]) === false) {
+                            break;
+                        }
+                    }
+                } else {
+                    for (key in obj) {
+                        if (callbcak.call(obj[key], key, obj[key]) === false) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return obj;
+        },
+
+        map: function (elems, callback, arg) {
+            var i = 0,
+                length = elems.length,
+                set = [],
+                key,
+                value;
+
+            if (this.isArray(elems)) {
+                for (; i < length; i++) {
+                    value = callback.apply(elems[i], arg);
+                    if (value) {
+                        set[set.length] = value;
+                    }
+                }
+            } else {
+                for (key in elems) {
+                    value = elems[key];
+                    if(value) {
+                        set[set.length] = value;
+                    }
+                }
+            }
+
+            return set;
+        }
+    });
 
     window.Van = window.$ = Van;
 

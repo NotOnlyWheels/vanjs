@@ -2,7 +2,6 @@
 [![Build Status](https://travis-ci.org/Jiavan/vanjs.svg?branch=master)](https://travis-ci.org/Jiavan/vanjs)
 
 用原生JS封装，简化DOM/Ajax等操作的类库.
-每次使用jQuery的时候，总会去想这个方法该如何用原生js实现，遂造轮.
 van2.0后的版本采用Qunit测试框架进行单元测试，gulp进行构建.
 直接引入`src/van.js`，导出的对象直接挂载在`window.Van`
 

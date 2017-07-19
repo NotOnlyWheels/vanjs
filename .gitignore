@@ -1,3 +1,5 @@
-./.idea/*
-./doc.md
-./jquery2.0.0.js
+.idea
+node_module
+.DS_Store
+dest
+bower_components
